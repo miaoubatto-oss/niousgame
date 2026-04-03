@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les jeux de Vax</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #11111a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #7c6af7;
+    --accent2: #f76a8a;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(124,106,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+
+  .navbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 52px;
+  }
+
+  .nav-link {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.active { color: #ffffff; background: var(--accent); }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .site-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .site-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .view-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .view-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .view-btn.active { background: var(--accent); color: #fff; }
+  .view-btn:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  .count-badge {
+    margin-left: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  .count-badge strong {
+    color: var(--accent);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding-bottom: 60px;
+  }
+
+  .game-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .game-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 32px rgba(124,106,247,0.15);
+  }
+
+  .card-img { width: 100%; height: 160px; object-fit: cover; display: block; }
+
+  .card-img-placeholder {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, var(--surface2), var(--border));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+  }
+
+  .card-body { padding: 16px; }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .game-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+  }
+
+  .game-price {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .game-price.free { background: linear-gradient(135deg, #4ade80, #22d3ee); }
+
+  .rating { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .stars { color: var(--yellow); font-size: 0.85rem; letter-spacing: 1px; }
+  .rating-num { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem; color: var(--yellow); }
+
+  .game-review {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+
+  .pro-con-block { background: var(--surface2); border-radius: 8px; padding: 8px; }
+
+  .pro-con-title {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .pro-con-title.pos { color: var(--green); }
+  .pro-con-title.neg { color: var(--red); }
+
+  .pro-con-list { list-style: none; font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+  .pros .pro-con-list li::before { content: '+ '; color: var(--green); }
+  .cons .pro-con-list li::before { content: '− '; color: var(--red); }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .steam-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .steam-link:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.08); }
+
+  .genre-tag {
+    font-size: 0.7rem;
+    color: #ffffff;
+    background: rgba(124,106,247,0.12);
+    border: 1px solid var(--accent);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .games-list { display: flex; flex-direction: column; gap: 2px; padding-bottom: 60px; }
+
+  .game-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s, background 0.2s;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .game-row:hover { border-color: var(--accent); background: var(--surface2); }
+
+  .row-name { font-family: 'Rajdhani', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em; }
+  .row-genre { font-size: 0.72rem; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .row-rating { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--yellow); min-width: 36px; text-align: center; }
+  .row-price { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; font-weight: 600; color: var(--accent); min-width: 50px; text-align: right; }
+
+  .row-steam {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .row-steam:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 600px) {
+    .game-row { grid-template-columns: 1fr auto; }
+    .row-rating, .row-price { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-link" href="index.html">Les jeux de Nious</a>
+    <a class="nav-link active" href="vax.html">Les jeux de Vax</a>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <header>
+    <div class="site-title">LES JEUX<span> DE VAX</span></div>
+    <div class="subtitle">Les suggestions de Vax — à checker ensemble</div>
+  </header>
+
+  <div class="controls">
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnCards" onclick="setView('cards')">⊞ Cartes</button>
+      <button class="view-btn" id="btnList" onclick="setView('list')">☰ Liste</button>
+    </div>
+    <div class="count-badge"><strong id="gameCount">0</strong> jeux</div>
+  </div>
+
+  <div id="cardsView" class="games-grid"></div>
+  <div id="listView" class="games-list" style="display:none;"></div>
+</div>
+
+<script>
+
+// =======================================================
+// 🎮 LES JEUX DE VAX — modifie uniquement cette zone
+// =======================================================
+
+const games = [
+  {
+    name: "Exemple",
+    price: "0€",
+    rating: null,
+    genre: "Genre",
+    steam: "",
+    review: "À remplir !",
+    pros: [],
+    cons: [],
+    img: ""
+  },
+];
+
+// =======================================================
+// ⛔ NE PAS MODIFIER EN DESSOUS DE CETTE LIGNE
+// =======================================================
+
+  function stars(n) {
+    const full = Math.round(n / 2);
+    return '★'.repeat(Math.min(full, 5)) + '☆'.repeat(Math.max(0, 5 - full));
+  }
+
+  function isFree(p) {
+    return p && (p.toLowerCase() === 'gratuit' || p.toLowerCase() === 'free');
+  }
+
+  function renderCards() {
+    document.getElementById('cardsView').innerHTML = games.map((g, i) => `
+      <div class="game-card" style="animation-delay:${i*0.06}s">
+        ${g.img ? `<img class="card-img" src="${g.img}" alt="${g.name}">` : `<div class="card-img-placeholder">🎮</div>`}
+        <div class="card-body">
+          <div class="card-header">
+            <div class="game-name">${g.name}</div>
+            ${g.price ? `<div class="game-price ${isFree(g.price)?'free':''}">${g.price}</div>` : ''}
+          </div>
+          ${g.rating ? `<div class="rating"><span class="stars">${stars(g.rating)}</span><span class="rating-num">${g.rating}/10</span></div>` : ''}
+          ${g.review ? `<p class="game-review">${g.review}</p>` : ''}
+          ${(g.pros?.length || g.cons?.length) ? `
+          <div class="pros-cons">
+            <div class="pro-con-block pros">
+              <div class="pro-con-title pos">Points +</div>
+              <ul class="pro-con-list">${(g.pros||[]).map(p=>`<li>${p}</li>`).join('')}</ul>
+            </div>
+            <div class="pro-con-block cons">
+              <div class="pro-con-title neg">Points −</div>
+              <ul class="pro-con-list">${(g.cons||[]).map(c=>`<li>${c}</li>`).join('')}</ul>
+            </div>
+          </div>` : ''}
+          <div class="card-footer">
+            ${g.steam ? `<a href="${g.steam}" target="_blank" class="steam-link">🎮 Steam</a>` : '<span></span>'}
+            ${g.genre ? `<span class="genre-tag">${g.genre}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderList() {
+    document.getElementById('listView').innerHTML = games.map((g, i) => `
+      <div class="game-row" style="animation-delay:${i*0.04}s">
+        <div>
+          <div class="row-name">${g.name}</div>
+          ${g.genre ? `<div class="row-genre">${g.genre}</div>` : ''}
+        </div>
+        <div class="row-rating">${g.rating ? g.rating+'/10' : '—'}</div>
+        <div class="row-price">${g.price || '—'}</div>
+        ${g.steam ? `<a href="${g.steam}" target="_blank" class="row-steam">Steam ↗</a>` : '<span></span>'}
+      </div>
+    `).join('');
+  }
+
+  function setView(v) {
+    document.getElementById('cardsView').style.display = v === 'cards' ? 'grid' : 'none';
+    document.getElementById('listView').style.display  = v === 'list'  ? 'flex'  : 'none';
+    document.getElementById('btnCards').classList.toggle('active', v === 'cards');
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+  }
+
+  document.getElementById('gameCount').textContent = games.length;
+  renderCards();
+  renderList();
+</script>
+</body>
+</html>
