@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Votes — GameList</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #11111a;
+    --surface2: #1a1a28;
+    --border: #2a2a40;
+    --accent: #7c6af7;
+    --accent2: #f76a8a;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --gold: #f59e0b;
+    --silver: #94a3b8;
+    --bronze: #b45309;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(124,106,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+
+  .navbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 52px;
+  }
+
+  .nav-link {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .nav-link:hover { color: var(--text); background: var(--surface2); }
+  .nav-link.active { color: #ffffff; background: var(--accent); }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  header {
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .site-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .site-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 8px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  /* PLAYER SELECT */
+  .player-select-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+
+  .player-select-section h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .player-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .player-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .player-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .player-btn.selected {
+    background: linear-gradient(135deg, var(--accent), #9b6af7);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(124,106,247,0.3);
+  }
+
+  /* TOP 3 */
+  .top3-section {
+    margin-bottom: 48px;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .podium {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .podium-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .podium-card.rank-1 { border-color: var(--gold); box-shadow: 0 4px 24px rgba(245,158,11,0.15); }
+  .podium-card.rank-2 { border-color: var(--silver); box-shadow: 0 4px 24px rgba(148,163,184,0.1); }
+  .podium-card.rank-3 { border-color: var(--bronze); box-shadow: 0 4px 24px rgba(180,83,9,0.1); }
+
+  .rank-badge {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+
+  .podium-game {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+
+  .podium-votes {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .rank-1 .podium-votes { color: var(--gold); }
+  .rank-2 .podium-votes { color: var(--silver); }
+  .rank-3 .podium-votes { color: var(--bronze); }
+
+  .podium-voters {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* VOTE LIST */
+  .vote-section { padding-bottom: 60px; }
+
+  .vote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .vote-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: grid;
+    grid-template-columns: 1fr repeat(4, 44px) 60px;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s, background 0.2s;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .vote-row:hover { background: var(--surface2); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .vote-game-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .vote-player-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .vote-player-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .vote-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .vote-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: scale(1.1);
+  }
+
+  .vote-btn.voted {
+    background: rgba(74,222,128,0.15);
+    border-color: var(--green);
+  }
+
+  .vote-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .vote-total {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  .vote-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+
+  .vote-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* NO PLAYER SELECTED */
+  .no-player-notice {
+    background: rgba(124,106,247,0.08);
+    border: 1px solid rgba(124,106,247,0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    color: var(--accent);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY PODIUM */
+  .podium-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    padding: 40px;
+    font-size: 0.9rem;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 200;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  @media (max-width: 600px) {
+    .podium { grid-template-columns: 1fr; }
+    .vote-row { grid-template-columns: 1fr repeat(4, 36px) 50px; gap: 6px; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="nav-link" href="index.html">Les jeux de Nious</a>
+    <a class="nav-link" href="vax.html">Les jeux de Vax</a>
+    <a class="nav-link active" href="votes.html">Votes</a>
+  </div>
+</nav>
+
+<div class="wrapper">
+  <header>
+    <div class="site-title">LES<span> VOTES</span></div>
+    <div class="subtitle">À quoi joue-t-on ce soir ?</div>
+  </header>
+
+  <!-- CHOIX DU JOUEUR -->
+  <div class="player-select-section">
+    <h2>👤 C'est qui ?</h2>
+    <div class="player-buttons">
+      <button class="player-btn" onclick="selectPlayer('Nious')">Nious</button>
+      <button class="player-btn" onclick="selectPlayer('Vax')">Vax</button>
+      <button class="player-btn" onclick="selectPlayer('Niko')">Niko</button>
+      <button class="player-btn" onclick="selectPlayer('YokYok')">YokYok</button>
+    </div>
+  </div>
+
+  <!-- TOP 3 -->
+  <div class="top3-section">
+    <div class="section-title">🏆 Top 3</div>
+    <div class="podium" id="podium">
+      <div class="loading" style="grid-column:1/-1">
+        <div class="spinner"></div>
+        Chargement des votes...
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTE DES VOTES -->
+  <div class="vote-section">
+    <div class="section-title">🎮 Tous les jeux</div>
+    <div id="noPlayerNotice" class="no-player-notice" style="display:none">
+      ☝️ Sélectionne ton pseudo en haut pour pouvoir voter !
+    </div>
+    <div class="vote-list" id="voteList">
+      <div class="loading">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =============================================
+// ⚙️ CONFIG — remplace l'URL par la tienne
+// =============================================
+const SCRIPT_URL = 'COLLE_TON_URL_ICI';
+
+// Liste des joueurs
+const PLAYERS = ['Nious', 'Vax', 'Niko', 'YokYok'];
+
+// =============================================
+// Liste de tous les jeux (nom exact comme dans le Sheet)
+// Ajoute ici tous les jeux de tes deux pages
+// =============================================
+const GAMES = [
+  "Valheim",
+  "Deep Rock Galactic",
+  "It Takes Two",
+  "Endless Legend",
+  "Conan Exiles",
+  "Dungeon Defenders",
+  "Risk of Rain 2",
+  "Jump Space",
+  "Windrose",
+  "Zeverland",
+  "Salvation Denied",
+  "Restaurats",
+  "Goblin Cleanup",
+  "Ale & Tale Tavern",
+  "Wild Woods",
+  "Unrailed!",
+];
+// =============================================
+
+let currentPlayer = null;
+let votesData = {};
+
+// Init
+loadVotes();
+
+function selectPlayer(name) {
+  currentPlayer = name;
+  document.querySelectorAll('.player-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.player-btn').forEach(b => {
+    if (b.textContent === name) b.classList.add('selected');
+  });
+  document.getElementById('noPlayerNotice').style.display = 'none';
+  renderVoteList();
+}
+
+async function loadVotes() {
+  try {
+    const res = await fetch(SCRIPT_URL);
+    const data = await res.json();
+    votesData = {};
+    data.forEach(row => {
+      if (row['Jeu']) votesData[row['Jeu']] = row;
+    });
+    renderPodium();
+    renderVoteList();
+  } catch(e) {
+    document.getElementById('podium').innerHTML = '<div class="podium-empty">Impossible de charger les votes.</div>';
+    document.getElementById('voteList').innerHTML = '';
+  }
+}
+
+function getTotal(jeu) {
+  if (!votesData[jeu]) return 0;
+  return parseInt(votesData[jeu]['Total']) || 0;
+}
+
+function getPlayerVote(jeu, player) {
+  if (!votesData[jeu]) return false;
+  return votesData[jeu][player] === '✅';
+}
+
+function getVoters(jeu) {
+  if (!votesData[jeu]) return [];
+  return PLAYERS.filter(p => votesData[jeu][p] === '✅');
+}
+
+function renderPodium() {
+  const sorted = [...GAMES].sort((a, b) => getTotal(b) - getTotal(a)).slice(0, 3);
+  const medals = ['🥇', '🥈', '🥉'];
+  const rankClass = ['rank-1', 'rank-2', 'rank-3'];
+
+  const hasVotes = sorted.some(g => getTotal(g) > 0);
+
+  if (!hasVotes) {
+    document.getElementById('podium').innerHTML = '<div class="podium-empty">Aucun vote pour l\'instant — soyez les premiers ! 🎮</div>';
+    return;
+  }
+
+  document.getElementById('podium').innerHTML = sorted.map((jeu, i) => {
+    const total = getTotal(jeu);
+    const voters = getVoters(jeu);
+    return `
+      <div class="podium-card ${rankClass[i]}" style="animation-delay:${i*0.1}s">
+        <div class="rank-badge">${medals[i]}</div>
+        <div class="podium-game">${jeu}</div>
+        <div class="podium-votes">${total}<span style="font-size:0.8rem;color:var(--muted)">/4</span></div>
+        <div class="podium-voters">${voters.length ? voters.join(' · ') : 'Aucun vote'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderVoteList() {
+  const maxVotes = Math.max(...GAMES.map(g => getTotal(g)), 1);
+
+  if (!currentPlayer) {
+    document.getElementById('noPlayerNotice').style.display = 'block';
+  }
+
+  document.getElementById('voteList').innerHTML = GAMES.map((jeu, i) => {
+    const total = getTotal(jeu);
+    const barWidth = Math.round((total / 4) * 100);
+
+    const playerCols = PLAYERS.map(p => {
+      const voted = getPlayerVote(jeu, p);
+      const isMe = p === currentPlayer;
+      const disabled = !currentPlayer ? 'disabled' : (!isMe ? 'disabled' : '');
+      return `
+        <div class="vote-player-col">
+          <span class="vote-player-label">${p}</span>
+          <button class="vote-btn ${voted ? 'voted' : ''}" ${disabled}
+            onclick="toggleVote('${jeu}', '${p}')"
+            title="${voted ? 'Retirer le vote' : 'Voter'}">
+            ${voted ? '✅' : '🎮'}
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="vote-row" style="animation-delay:${i*0.03}s">
+        <div>
+          <div class="vote-game-name">${jeu}</div>
+          <div class="vote-bar"><div class="vote-bar-fill" style="width:${barWidth}%"></div></div>
+        </div>
+        ${playerCols}
+        <div class="vote-total">${total}/4</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function toggleVote(jeu, player) {
+  if (!currentPlayer || player !== currentPlayer) return;
+
+  const currentVote = getPlayerVote(jeu, player);
+  const newVote = !currentVote;
+
+  // Mise à jour optimiste
+  if (!votesData[jeu]) votesData[jeu] = { Jeu: jeu };
+  votesData[jeu][player] = newVote ? '✅' : '❌';
+  let total = 0;
+  PLAYERS.forEach(p => { if (votesData[jeu][p] === '✅') total++; });
+  votesData[jeu]['Total'] = total;
+
+  renderPodium();
+  renderVoteList();
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jeu, joueur: player, vote: newVote })
+    });
+    showToast(newVote ? `✅ Vote pour ${jeu} enregistré !` : `❌ Vote retiré`);
+  } catch(e) {
+    showToast('Erreur réseau — réessaie', true);
+  }
+}
+
+function showToast(msg, error = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (error ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
