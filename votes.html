@@ -486,7 +486,7 @@
 // =============================================
 // ⚙️ CONFIG — remplace l'URL par la tienne
 // =============================================
-const SCRIPT_URL = 'COLLE_TON_URL_ICI';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9c0bcS-KWQ_w-dCFDhHi_Zl1rjVCNNqtovJsr4-IUavUqVeKRQgckGk3RwCrhBlnp/exec';
 
 // Liste des joueurs
 const PLAYERS = ['Nious', 'Vax', 'Niko', 'YokYok'];
@@ -627,7 +627,6 @@ function renderVoteList() {
     `;
   }).join('');
 }
-
 async function toggleVote(jeu, player) {
   if (!currentPlayer || player !== currentPlayer) return;
 
@@ -645,23 +644,13 @@ async function toggleVote(jeu, player) {
   renderVoteList();
 
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jeu, joueur: player, vote: newVote })
-    });
+    const url = `${SCRIPT_URL}?action=vote&jeu=${encodeURIComponent(jeu)}&joueur=${encodeURIComponent(player)}&vote=${newVote}`;
+    await fetch(url);
     showToast(newVote ? `✅ Vote pour ${jeu} enregistré !` : `❌ Vote retiré`);
+    loadVotes();
   } catch(e) {
     showToast('Erreur réseau — réessaie', true);
   }
-}
-
-function showToast(msg, error = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (error ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3000);
 }
 </script>
 </body>
