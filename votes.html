@@ -205,22 +205,84 @@
     background: var(--border);
   }
 
-  .podium {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-  }
+.podium {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+ }
+
+.recap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 32px;
+  padding-bottom: 60px;
+}
+
+.recap-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: fadeUp 0.3s ease both;
+}
+
+.recap-medal { font-size: 1.1rem; width: 24px; text-align: center; }
+
+.recap-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  flex: 1;
+}
+
+.recap-bar-wrap {
+  width: 140px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.recap-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.recap-score {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  min-width: 32px;
+  text-align: right;
+}
+
+.recap-voters {
+  font-size: 0.72rem;
+  color: var(--muted);
+  min-width: 140px;
+  text-align: right;
+}
 
   .podium-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    animation: fadeUp 0.4s ease both;
-  }
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeUp 0.4s ease both;
+  flex: 1;
+  min-width: 200px;
+}
 
   .podium-card.rank-1 { border-color: var(--gold); box-shadow: 0 4px 24px rgba(245,158,11,0.15); }
   .podium-card.rank-2 { border-color: var(--silver); box-shadow: 0 4px 24px rgba(148,163,184,0.1); }
@@ -562,29 +624,63 @@ function getVoters(jeu) {
 }
 
 function renderPodium() {
-  const sorted = [...GAMES].sort((a, b) => getTotal(b) - getTotal(a)).slice(0, 3);
+  const sorted = [...GAMES]
+    .map(g => ({ jeu: g, total: getTotal(g), voters: getVoters(g) }))
+    .filter(g => g.total > 0)
+    .sort((a, b) => b.total - a.total);
+
   const medals = ['🥇', '🥈', '🥉'];
   const rankClass = ['rank-1', 'rank-2', 'rank-3'];
 
-  const hasVotes = sorted.some(g => getTotal(g) > 0);
-
-  if (!hasVotes) {
+  if (!sorted.length) {
     document.getElementById('podium').innerHTML = '<div class="podium-empty">Aucun vote pour l\'instant — soyez les premiers ! 🎮</div>';
     return;
   }
 
-  document.getElementById('podium').innerHTML = sorted.map((jeu, i) => {
-    const total = getTotal(jeu);
-    const voters = getVoters(jeu);
-    return `
-      <div class="podium-card ${rankClass[i]}" style="animation-delay:${i*0.1}s">
-        <div class="rank-badge">${medals[i]}</div>
-        <div class="podium-game">${jeu}</div>
-        <div class="podium-votes">${total}<span style="font-size:0.8rem;color:var(--muted)">/4</span></div>
-        <div class="podium-voters">${voters.length ? voters.join(' · ') : 'Aucun vote'}</div>
+  // Top 3 compact
+  const top3 = sorted.slice(0, 3);
+  document.getElementById('podium').innerHTML = top3.map((g, i) => `
+    <div class="podium-card ${rankClass[i]}" style="animation-delay:${i*0.1}s">
+      <div class="rank-badge">${medals[i]}</div>
+      <div>
+        <div class="podium-game">${g.jeu}</div>
+        <div class="podium-voters">${g.voters.join(' · ')}</div>
       </div>
+      <div class="podium-votes" style="margin-left:auto">${g.total}<span style="font-size:0.7rem;color:var(--muted)">/4</span></div>
+    </div>
+  `).join('');
+
+  // Récap complet
+  const existingRecap = document.getElementById('recap');
+  if (existingRecap) existingRecap.remove();
+
+  const recapEl = document.createElement('div');
+  recapEl.id = 'recap';
+  recapEl.className = 'recap';
+
+  const recapTitle = document.createElement('div');
+  recapTitle.className = 'section-title';
+  recapTitle.style.marginTop = '32px';
+  recapTitle.innerHTML = '📊 Récap complet';
+  recapEl.appendChild(recapTitle);
+
+  sorted.forEach((g, i) => {
+    const medal = i < 3 ? medals[i] : '　';
+    const barWidth = Math.round((g.total / 4) * 100);
+    const row = document.createElement('div');
+    row.className = 'recap-row';
+    row.style.animationDelay = `${i * 0.04}s`;
+    row.innerHTML = `
+      <div class="recap-medal">${medal}</div>
+      <div class="recap-name">${g.jeu}</div>
+      <div class="recap-bar-wrap"><div class="recap-bar-fill" style="width:${barWidth}%"></div></div>
+      <div class="recap-score">${g.total}/4</div>
+      <div class="recap-voters">${g.voters.join(' · ')}</div>
     `;
-  }).join('');
+    recapEl.appendChild(row);
+  });
+
+  document.querySelector('.vote-section').insertAdjacentElement('beforebegin', recapEl);
 }
 
 function renderVoteList() {
